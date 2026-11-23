@@ -25,8 +25,9 @@ tresult PLUGIN_API vst002Controller::initialize (FUnknown* context)
 	}
 
 	// Here you could register some parameters
+	parameters.addParameter(STR16("Gain"), STR16("dB"), 0, .5, Vst::ParameterInfo::kCanAutomate, GainParams::kGainId, 0);
 
-	return result;
+	return kResultTrue;
 }
 
 //------------------------------------------------------------------------

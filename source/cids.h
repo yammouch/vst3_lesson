@@ -15,4 +15,9 @@ static const Steinberg::FUID kvst002ControllerUID (0x9C4F029E, 0x04B55919, 0xAD5
 #define vst002VST3Category "Fx"
 
 //------------------------------------------------------------------------
+enum GainParams : Steinberg::Vst::ParamID
+{
+	kGainId = 102,
+};
+
 } // namespace MyCompanyName

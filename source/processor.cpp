@@ -68,7 +68,7 @@ tresult PLUGIN_API vst002Processor::process (Vst::ProcessData& data)
 {
 	//--- First : Read inputs parameter changes-----------
 
-	/*if (data.inputParameterChanges)
+	if (data.inputParameterChanges)
 	{
 		int32 numParamsChanged = data.inputParameterChanges->getParameterCount ();
 		for (int32 index = 0; index < numParamsChanged; index++)
@@ -80,10 +80,16 @@ tresult PLUGIN_API vst002Processor::process (Vst::ProcessData& data)
 				int32 numPoints = paramQueue->getPointCount ();
 				switch (paramQueue->getParameterId ())
 				{
+				case GainParams::kGainId:
+					if (paramQueue->getPoint (numPoints - 1, sampleOffset, value) == kResultTrue)
+					{
+						mGain = value;
+					}
+					break;
 				}
 			}
 		}
-	}*/
+	}
 	
 	//--- Here you have to implement your processing
 
