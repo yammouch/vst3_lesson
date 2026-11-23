@@ -6,6 +6,7 @@
 #include "cids.h"
 
 #include "base/source/fstreamer.h"
+#include "pluginterfaces/vst/ivstevents.h"
 #include "pluginterfaces/vst/ivstparameterchanges.h"
 
 using namespace Steinberg;
@@ -90,6 +91,30 @@ tresult PLUGIN_API vst002Processor::process (Vst::ProcessData& data)
 			}
 		}
 	}
+
+	//---Second: Read input events------------
+	// get the list of all event changes
+	Vst::IEventList* eventList = data.inputEvents;
+	if (eventList)
+	{
+		int32 numEvent = eventList->getEventCount();
+		for (int32 i = 0; i < numEvent; i++)
+		{
+			Vst::Event event;
+			if (eventList->getEvent(i, event) == kResultOk)
+			{
+				switch (event.type)
+				{
+					case Vst::Event::kNoteOnEvent:
+						mGainReduction = event.noteOn.velocity;
+						break;
+					case Vst::Event::kNoteOffEvent:
+						mGainReduction = 0.f;
+						break;
+				}
+			}
+		}
+	}
 	
 	//--- Here you have to implement your processing
 
@@ -103,7 +128,7 @@ tresult PLUGIN_API vst002Processor::process (Vst::ProcessData& data)
 		
 		// mGain is a normalized parameter value (ParamValue = double), while the
 		// buffers are Sample32 (float): convert once instead of per sample
-		const Vst::Sample32 gain = static_cast<Vst::Sample32> (mGain);
+		const Vst::Sample32 gain = static_cast<Vst::Sample32> (mGain - mGainReduction);
 
 		int32 minBus = std::min (data.numInputs, data.numOutputs);
 		for (int32 i = 0; i < minBus; i++)
