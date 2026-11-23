@@ -96,24 +96,34 @@ tresult PLUGIN_API vst002Processor::process (Vst::ProcessData& data)
 	if (data.numSamples > 0)
 	{
 		//--- ------------------------------------------
-		// here as example a default implementation where we try to copy the inputs to the outputs:
+		// here as example a default implementation where we apply a simple gain:
+		// the gain is attenuation only (normalized parameter value in [0, 1])
 		// if less input than outputs then clear outputs
 		//--- ------------------------------------------
 		
+		// mGain is a normalized parameter value (ParamValue = double), while the
+		// buffers are Sample32 (float): convert once instead of per sample
+		const Vst::Sample32 gain = static_cast<Vst::Sample32> (mGain);
+
 		int32 minBus = std::min (data.numInputs, data.numOutputs);
 		for (int32 i = 0; i < minBus; i++)
 		{
 			int32 minChan = std::min (data.inputs[i].numChannels, data.outputs[i].numChannels);
 			for (int32 c = 0; c < minChan; c++)
 			{
-				// do not need to be copied if the buffers are the same
-				if (data.outputs[i].channelBuffers32[c] != data.inputs[i].channelBuffers32[c])
-				{
-					memcpy (data.outputs[i].channelBuffers32[c], data.inputs[i].channelBuffers32[c],
-							data.numSamples * sizeof (Vst::Sample32));
-				}
+				const Vst::Sample32* in  = data.inputs[i].channelBuffers32[c];
+				Vst::Sample32*       out = data.outputs[i].channelBuffers32[c];
+
+				// in-place is fine: every sample is read before the same index is written
+				for (int32 s = 0; s < data.numSamples; s++)
+					out[s] = in[s] * gain;
 			}
-			data.outputs[i].silenceFlags = data.inputs[i].silenceFlags;
+
+			// the output is silent where the input is silent,
+			// and everywhere when the gain mutes it completely
+			data.outputs[i].silenceFlags = (gain == 0.0f)
+				? (((uint64)1 << minChan) - 1)
+				: data.inputs[i].silenceFlags;
 				
 			// clear the remaining output buffers
 			for (int32 c = minChan; c < data.outputs[i].numChannels; c++)
