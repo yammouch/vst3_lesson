@@ -177,9 +177,16 @@ tresult PLUGIN_API vst002Processor::canProcessSampleSize (int32 symbolicSampleSi
 //------------------------------------------------------------------------
 tresult PLUGIN_API vst002Processor::setState (IBStream* state)
 {
+	if (!state)
+		return kResultFalse;
+
 	// called when we load a preset, the model has to be reloaded
 	IBStreamer streamer (state, kLittleEndian);
-	
+	float savedParam1 = 0.f;
+	if (streamer.readFloat(savedParam1) == false)
+		return kResultFalse;
+	mGain = savedParam1;
+
 	return kResultOk;
 }
 
@@ -187,8 +194,9 @@ tresult PLUGIN_API vst002Processor::setState (IBStream* state)
 tresult PLUGIN_API vst002Processor::getState (IBStream* state)
 {
 	// here we need to save the model
+	float toSaveParam1 = mGain;
 	IBStreamer streamer (state, kLittleEndian);
-
+	streamer.writeFloat (toSaveParam1);
 	return kResultOk;
 }
 

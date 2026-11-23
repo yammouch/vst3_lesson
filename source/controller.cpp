@@ -5,6 +5,7 @@
 #include "controller.h"
 #include "cids.h"
 #include "vstgui/plugin-bindings/vst3editor.h"
+#include "base/source/fstreamer.h"
 
 using namespace Steinberg;
 
@@ -45,6 +46,17 @@ tresult PLUGIN_API vst002Controller::setComponentState (IBStream* state)
 	// Here you get the state of the component (Processor part)
 	if (!state)
 		return kResultFalse;
+
+	IBStreamer streamer(state, kLittleEndian);
+	float savedParam1 = 0.f;
+	if (streamer.readFloat(savedParam1) == false)
+		return kResultFalse;
+
+	// sync with our parameter
+	if (auto param = parameters.getParameter(GainParams::kGainId))
+	{
+		param->setNormalized(savedParam1);
+	}
 
 	return kResultOk;
 }
